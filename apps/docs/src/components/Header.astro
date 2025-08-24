@@ -1,0 +1,53 @@
+---
+import { Icon } from '@astrojs/starlight/components';
+---
+
+<div class="header-banner">
+  <span class="badge-beta">BETA</span>
+  <span>Effect Kit is in active development. Join us in building the future!</span>
+  <a href="https://github.com/effectkit/effectkit" target="_blank" rel="noopener noreferrer">
+    Star on GitHub <Icon name="external" />
+  </a>
+</div>
+
+<style>
+  .header-banner {
+    background: linear-gradient(to right, #3B82F6, #10B981);
+    color: white;
+    padding: 0.5rem 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .badge-beta {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.8rem;
+  }
+  
+  .header-banner a {
+    color: white;
+    text-decoration: underline;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  
+  .header-banner a:hover {
+    text-decoration: none;
+  }
+  
+  @media (max-width: 640px) {
+    .header-banner {
+      font-size: 0.8rem;
+      padding: 0.5rem;
+    }
+  }
+</style>

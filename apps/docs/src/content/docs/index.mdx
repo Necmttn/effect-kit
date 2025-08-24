@@ -1,0 +1,108 @@
+---
+title: Effect Kit
+description: The Ultimate Full-Stack Framework for Effect.ts Applications
+template: splash
+hero:
+  tagline: Build type-safe, resilient applications with the power of Effect.ts and the joy of modern developer experience
+  actions:
+    - text: Quick Start
+      link: /quick-start/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/effectkit/effectkit
+      icon: external
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Build Production-Ready Apps with Confidence
+
+Effect Kit is to Effect.ts what Laravel is to PHP - an opinionated, batteries-included framework that transforms Effect's powerful functional programming paradigm into a delightful developer experience.
+
+<CardGrid stagger>
+  <Card title="Type Safety Everywhere" icon="shield">
+    From database queries to API calls, enjoy end-to-end type safety without the boilerplate.
+  </Card>
+  <Card title="Batteries Included" icon="rocket">
+    Authentication, database, caching, queues, and more - everything pre-configured and ready.
+  </Card>
+  <Card title="Modern Stack" icon="stack">
+    Built on TanStack Start, Effect RPC, and cutting-edge tooling for the best developer experience.
+  </Card>
+  <Card title="Production Ready" icon="check">
+    Observability, error tracking, and deployment strategies built-in from day one.
+  </Card>
+</CardGrid>
+
+## Quick Example
+
+```typescript
+import { Effect, Schema } from "effect"
+import { api, auth } from "@effect-kit/core"
+
+// Define your schema with Effect Schema
+const Todo = Schema.Struct({
+  id: Schema.String,
+  title: Schema.String,
+  completed: Schema.Boolean,
+})
+
+// Create type-safe API routes
+export const todoApi = api.group("todos", {
+  middleware: [auth.required()],
+  
+  routes: {
+    create: api.post("/")
+      .schema(Todo)
+      .handle(({ body, user }) =>
+        Effect.gen(function* () {
+          const db = yield* Database
+          return yield* db.insert("todos", {
+            ...body,
+            userId: user.id
+          })
+        })
+      ),
+  }
+})
+```
+
+## Why Effect Kit?
+
+<CardGrid>
+  <Card title="Developer Happiness" icon="heart">
+    Every API decision prioritizes developer ergonomics without sacrificing Effect's type safety.
+  </Card>
+  <Card title="Convention over Configuration" icon="setting">
+    Sensible defaults that work out of the box, with escape hatches when needed.
+  </Card>
+  <Card title="Learn Once, Build Anything" icon="puzzle">
+    From simple APIs to complex distributed systems, the same patterns scale with you.
+  </Card>
+</CardGrid>
+
+## Get Started in Seconds
+
+```bash
+npx create-effect-app@latest my-app
+cd my-app
+bun dev
+```
+
+Your app will be running at [http://localhost:3000](http://localhost:3000) 🎉
+
+## Join the Community
+
+<CardGrid>
+  <Card title="Discord" icon="discord">
+    Join our Discord server for help, discussions, and updates.
+    
+    [Join Discord →](https://discord.gg/effectkit)
+  </Card>
+  <Card title="GitHub" icon="github">
+    Star us on GitHub and contribute to the project.
+    
+    [View on GitHub →](https://github.com/effectkit/effectkit)
+  </Card>
+</CardGrid>

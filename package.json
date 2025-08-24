@@ -1,0 +1,45 @@
+{
+  "name": "effect-kit",
+  "version": "1.0.0",
+  "description": "The Ultimate Full-Stack Framework for Effect.ts Applications",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun run --filter './apps/*' dev",
+    "build": "bun run --filter './apps/*' --filter './packages/*' build",
+    "test": "bun run --filter './apps/*' --filter './packages/*' test",
+    "lint": "bun run --filter './apps/*' --filter './packages/*' lint",
+    "typecheck": "bun run --filter './apps/*' --filter './packages/*' typecheck",
+    "clean": "rm -rf apps/*/dist packages/*/dist apps/*/.turbo packages/*/.turbo",
+    "docs:dev": "bun run --filter @effect-kit/docs dev",
+    "docs:build": "bun run --filter @effect-kit/docs build",
+    "prepare": "lefthook install && ts-patch install -s"
+  },
+  "keywords": [
+    "effect",
+    "typescript",
+    "fullstack",
+    "framework"
+  ],
+  "author": "Necmttn",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0",
+    "bun": ">=1.0.0"
+  },
+  "packageManager": "bun@1.1.0",
+  "devDependencies": {
+    "@effect/language-service": "^0.1.0",
+    "@effect/vitest": "^0.23.2",
+    "ts-patch": "^3.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "trustedDependencies": [
+    "@parcel/watcher"
+  ]
+}

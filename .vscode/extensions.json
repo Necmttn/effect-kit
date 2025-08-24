@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "astro-build.astro-vscode",
+    "effectful-tech.effect-vscode",
+    "effect-ts.effect-language-service"
+  ]
+}

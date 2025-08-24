@@ -1,0 +1,25 @@
+{
+  "name": "auth-jwt",
+  "type": "service",
+  "description": "JWT-based authentication service with bcrypt password hashing",
+  "dependencies": [
+    "jsonwebtoken",
+    "bcryptjs"
+  ],
+  "devDependencies": [
+    "@types/jsonwebtoken",
+    "@types/bcryptjs"
+  ],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "src/services/AuthService.ts",
+      "type": "registry:service",
+      "content": "{{> auth-jwt.ts}}"
+    }
+  ],
+  "docs": "https://effectkit.dev/docs/features/auth/jwt",
+  "source": "https://github.com/effectkit/effectkit/tree/main/registry/auth-jwt",
+  "category": "authentication",
+  "subcategory": "jwt"
+}
