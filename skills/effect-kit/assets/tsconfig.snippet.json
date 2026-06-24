@@ -1,0 +1,19 @@
+{ "compilerOptions": { "plugins": [ { "name": "@effect/language-service",
+  "ignoreEffectWarningsInTscExitCode": true,
+  "diagnosticSeverity": {
+    "importFromBarrel": "error", "anyUnknownInErrorContext": "error",
+    "unsafeEffectTypeAssertion": "error", "instanceOfSchema": "error",
+    "deterministicKeys": "error", "missingEffectServiceDependency": "error",
+    "leakingRequirements": "error", "globalErrorInEffectCatch": "error",
+    "globalErrorInEffectFailure": "error", "unknownInEffectCatch": "error",
+    "preferSchemaOverJson": "error", "schemaSyncInEffect": "error",
+    "cryptoRandomUUID": "error", "cryptoRandomUUIDInEffect": "error",
+    "nodeBuiltinImport": "error",
+    "globalDate": "error", "globalDateInEffect": "error",
+    "globalConsole": "error", "globalConsoleInEffect": "error",
+    "globalRandom": "error", "globalRandomInEffect": "error",
+    "globalTimers": "error", "globalTimersInEffect": "error",
+    "globalFetch": "error", "globalFetchInEffect": "error"
+  },
+  "strictEffectProvide": "off", "lazyEffect": "off",
+  "namespaceImportPackages": ["effect"] } ] } }

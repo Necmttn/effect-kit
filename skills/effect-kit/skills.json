@@ -1,0 +1,22 @@
+{
+  "name": "effect-kit",
+  "version": "0.1.0",
+  "description": "The opinionated, agent-optimized way to set up, write, verify, and observe an Effect.ts codebase (tsgo + gate + v4 OTLP).",
+  "files": [
+    "SKILL.md",
+    "README.md",
+    "LICENSE",
+    "assets/diagnostics-recipes.json",
+    "assets/effect-lint-staged.sh",
+    "assets/lefthook.yml",
+    "assets/otel-maple.layer.ts",
+    "assets/oxlint-effect-rules/no-inline-schema-compile.ts",
+    "assets/package.deps.json",
+    "assets/tsconfig.snippet.json",
+    "references/observe.md",
+    "references/patterns.md",
+    "references/setup.md",
+    "references/testing.md",
+    "references/verify.md"
+  ]
+}

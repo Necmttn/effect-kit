@@ -1,0 +1,7 @@
+{ "devDependencies": {
+  "effect": "^4.0.0-beta.78",
+  "@effect/language-service": "^0.85.0",
+  "@effect/tsgo": "^0.13.0",
+  "@typescript/native-preview": "latest",
+  "oxlint": "^0.11.0", "oxlint-tsgolint": "^0.11.0",
+  "lefthook": "^1.7.0", "typescript": "~6.0.0" } }

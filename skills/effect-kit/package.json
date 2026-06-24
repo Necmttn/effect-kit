@@ -1,0 +1,11 @@
+{
+  "name": "effect-kit",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
