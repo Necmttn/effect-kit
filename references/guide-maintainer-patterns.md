@@ -12,12 +12,12 @@ techniques to reach for** (the second half of this file).
 The catalog `assets/effect-rules.json` tags every anti-pattern with a check tier.
 Walk them cheapest-first; only *think* about the last tier:
 
-1. **`oxlint`** - instant, AST. Run the custom rules:
+1. **`oxlint`** - instant, AST. With the `jsPlugins` config from verify.md, run:
    ```sh
-   oxlint --plugin ./node_modules/effect-kit/assets/oxlint-effect-rules src/
+   oxlint src/
    ```
-   Rules: `no-plain-error-class`, `no-layer-scoped`, `schema-filter-needs-jsonschema`,
-   `no-inline-schema-compile`.
+   Rules (namespaced `effect-kit/<rule>`): `no-plain-error-class`, `no-layer-scoped`,
+   `schema-filter-needs-jsonschema`, `no-inline-schema-compile`.
 2. **`grep`** - fast regex signals (the `grep` field of each catalog rule). Treat
    hits as candidates to confirm, e.g.:
    ```sh

@@ -125,20 +125,25 @@ rg '@effect/schema' src/ --type ts && echo "STALE @effect/schema import detected
 
 ### All custom oxlint rules
 
-`assets/oxlint-effect-rules/` ships four rules, each catching a pattern mechanically.
-Register them in your oxlint config:
+`assets/oxlint-effect-rules/` ships four rules plus an `index.ts` aggregator.
+Register the aggregator in `.oxlintrc.json` under **`jsPlugins`** (NOT `plugins` -
+that key is for oxlint's built-ins), then enable each rule by its **namespaced id**
+`effect-kit/<rule>`:
 
 ```json
 {
-  "plugins": ["./node_modules/effect-kit/assets/oxlint-effect-rules"],
+  "jsPlugins": ["./node_modules/effect-kit/assets/oxlint-effect-rules/index.ts"],
   "rules": {
-    "no-inline-schema-compile": "error",
-    "no-plain-error-class": "error",
-    "no-layer-scoped": "error",
-    "schema-filter-needs-jsonschema": "error"
+    "effect-kit/no-inline-schema-compile": "error",
+    "effect-kit/no-plain-error-class": "error",
+    "effect-kit/no-layer-scoped": "error",
+    "effect-kit/schema-filter-needs-jsonschema": "error"
   }
 }
 ```
+
+Then run plain `oxlint` (it reads `.oxlintrc.json`). Verified against oxlint 1.71:
+the rules fire on the bad patterns and stay silent on the corrected ones.
 
 - `no-inline-schema-compile` - `Schema.decodeSync(...)` compiled inline (re-parses every call); hoist it.
 - `no-plain-error-class` - `class X extends Error {}` collapses structurally; use `Data.TaggedError`. *(mikearnaldi #3742)*
@@ -175,7 +180,7 @@ Run in order. Stop at the first blocking failure.
 1. **Type check** - `tsc --noEmit` → exit must be 0
 2. **Effect diagnostics** - `effect-language-service diagnostics --format json --severity error,warning,message` on changed files → `summary.errors` must be 0 (warnings are advisory)
 3. **Stale schema import** - `rg '@effect/schema' src/ --type ts` → must return no matches
-4. **Oxlint** - `oxlint --plugin ./node_modules/effect-kit/assets/oxlint-effect-rules src/` → must exit 0
+4. **Oxlint** - `oxlint src/` (with the `jsPlugins` config above) → must exit 0
 5. **Maintainer-pattern grep sweep** - run the tier-2 regex sweep above; confirm each hit
 6. **Maintainer-pattern review scan** - scan the changed code against the `review`-tier `look_for` signals in `assets/effect-rules.json`
 7. **Unit tests** - `bun test` (or `pnpm test`) → must pass

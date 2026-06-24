@@ -11,6 +11,7 @@
     "assets/effect-rules.json",
     "assets/lefthook.yml",
     "assets/otel-maple.layer.ts",
+    "assets/oxlint-effect-rules/index.ts",
     "assets/oxlint-effect-rules/no-inline-schema-compile.ts",
     "assets/oxlint-effect-rules/no-layer-scoped.ts",
     "assets/oxlint-effect-rules/no-plain-error-class.ts",

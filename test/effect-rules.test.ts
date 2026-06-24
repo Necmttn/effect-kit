@@ -53,6 +53,21 @@ describe("effect-rules.json catalog", () => {
   });
 });
 
+describe("oxlint plugin loader contract (index.ts)", () => {
+  const index = readFileSync(
+    join(root, "assets", "oxlint-effect-rules", "index.ts"),
+    "utf8",
+  );
+  it("aggregates every rule via definePlugin under the effect-kit namespace", () => {
+    expect(index).toContain("definePlugin");
+    expect(index).toContain('name: "effect-kit"');
+    // every oxlint-tier catalog rule must be registered in the plugin
+    for (const r of catalog.rules.filter((r: any) => r.check === "oxlint")) {
+      expect(index, r.rule).toContain(`"${r.rule}"`);
+    }
+  });
+});
+
 describe("new oxlint rules (source text)", () => {
   const read = (name: string) =>
     readFileSync(join(root, "assets", "oxlint-effect-rules", `${name}.ts`), "utf8");
