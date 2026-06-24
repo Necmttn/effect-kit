@@ -18,6 +18,7 @@
     "assets/oxlint-effect-rules/schema-filter-needs-jsonschema.ts",
     "assets/package.deps.json",
     "assets/tsconfig.snippet.json",
+    "references/guide-effect-at-scale.md",
     "references/guide-maintainer-patterns.md",
     "references/observe.md",
     "references/patterns.md",

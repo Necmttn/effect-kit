@@ -8,7 +8,7 @@ description: The opinionated, agent-optimized way to set up, write, verify, and 
 
 ## Pillars
 - **Setup** → references/setup.md  (tsgo + gate + severity table; one opinionated full setup)
-- **Write** → references/patterns.md  (Makisuo's patterns + namespace imports)
+- **Write** → references/patterns.md  (Makisuo's patterns + namespace imports) · large-codebase architecture → references/guide-effect-at-scale.md (schema packages, LayerNode, shared memoMap, HttpApi, SQL, transport-agnostic errors)
 - **Verify** → references/verify.md  (diagnostics CLI + recipe pack; trust the exit code) · maintainer-pattern catalog → references/guide-maintainer-patterns.md (oxlint → grep → review)
 - **Observe** → references/observe.md  (v4 Otlp.layerJson → Maple; Agent-Observe via devkit)
 
