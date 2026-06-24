@@ -123,28 +123,48 @@ rg '@effect/schema' src/ --type ts && echo "STALE @effect/schema import detected
 
 `assets/oxlint-effect-rules/no-inline-schema-compile.ts` blocks calling `Schema.decodeSync` / `Schema.encodeSync` inline at the call site with a freshly constructed schema. Inline compilation re-parses the schema on every call, bypassing the memoized decode path.
 
-Register it in your oxlint config:
+### All custom oxlint rules
+
+`assets/oxlint-effect-rules/` ships four rules, each catching a pattern mechanically.
+Register them in your oxlint config:
 
 ```json
 {
   "plugins": ["./node_modules/effect-kit/assets/oxlint-effect-rules"],
   "rules": {
-    "no-inline-schema-compile": "error"
+    "no-inline-schema-compile": "error",
+    "no-plain-error-class": "error",
+    "no-layer-scoped": "error",
+    "schema-filter-needs-jsonschema": "error"
   }
 }
 ```
 
-The rule fires on patterns like:
+- `no-inline-schema-compile` - `Schema.decodeSync(...)` compiled inline (re-parses every call); hoist it.
+- `no-plain-error-class` - `class X extends Error {}` collapses structurally; use `Data.TaggedError`. *(mikearnaldi #3742)*
+- `no-layer-scoped` - `Layer.scoped` was removed in v4; use `Layer.effect`. *(official skill)*
+- `schema-filter-needs-jsonschema` - `Schema.filter(p)` without `{ jsonSchema }` throws in `JSONSchema.make`. *(gcanti #3915)*
 
-```typescript
-// BLOCKED
-Schema.decodeSync(Schema.Struct({ id: Schema.String }))(input)
+## Maintainer-pattern progressive check
 
-// CORRECT - hoist the compiled schema
-const InputSchema = Schema.Struct({ id: Schema.String })
-const decode = Schema.decodeSync(InputSchema)
-decode(input)
-```
+Beyond the static type/lint pass, `assets/effect-rules.json` is a machine-readable
+catalog of ~23 anti-patterns harvested from Effect maintainer guidance (see
+`references/guide-maintainer-patterns.md` for the prose + citations). Each rule is
+tagged with a **check tier** so an agent verifies fastest-first:
+
+1. **`oxlint`** (instant, AST) - the four custom rules above.
+2. **`grep`** (fast, regex) - each catalog rule with `check: "grep"` carries a `grep`
+   field; run them in one sweep:
+   ```sh
+   rg 'Effect\.runSync\(|Fiber\.join\(|Schema\.optional\(|@effect/schema|Stream(\.Stream)?<[^>]*Scope' src/
+   ```
+   Treat hits as candidates to confirm (these patterns are sometimes correct).
+3. **`review`** (judgment) - each catalog rule with `check: "review"` carries a
+   `look_for` describing the semantic signal (e.g. "`Effect.provide(AppLayer)` inside
+   a request handler"). No linter can decide these; the agent reads and judges.
+
+An agent should run tiers 1–2 in seconds, then scan the tier-3 `look_for` signals
+against the changed code. Report `error`/`warning` rule hits; `info` rules are FYI.
 
 ---
 
@@ -156,7 +176,9 @@ Run in order. Stop at the first blocking failure.
 2. **Effect diagnostics** - `effect-language-service diagnostics --format json --severity error,warning,message` on changed files → `summary.errors` must be 0 (warnings are advisory)
 3. **Stale schema import** - `rg '@effect/schema' src/ --type ts` → must return no matches
 4. **Oxlint** - `oxlint --plugin ./node_modules/effect-kit/assets/oxlint-effect-rules src/` → must exit 0
-5. **Unit tests** - `bun test` (or `pnpm test`) → must pass
+5. **Maintainer-pattern grep sweep** - run the tier-2 regex sweep above; confirm each hit
+6. **Maintainer-pattern review scan** - scan the changed code against the `review`-tier `look_for` signals in `assets/effect-rules.json`
+7. **Unit tests** - `bun test` (or `pnpm test`) → must pass
 
 Report all `warning` and `message` diagnostics in the verification summary but do not use them as a gate condition.
 

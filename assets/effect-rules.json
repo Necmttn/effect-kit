@@ -1,0 +1,261 @@
+{
+  "version": 1,
+  "description": "Effect.ts source-pattern rules harvested from Effect maintainer guidance (GitHub issues + the official Effect-TS skill). An agent checks progressively, fastest tier first: `oxlint` (instant, AST) -> `grep` (fast, regex) -> `review` (judgment, no linter can catch). Each rule cites its source.",
+  "tiers": {
+    "oxlint": "A custom rule in assets/oxlint-effect-rules/<rule>.ts catches it. Run oxlint with --plugin.",
+    "grep": "A regex signal (`grep` field). Fast to scan; may over/under-match, so treat hits as candidates to confirm.",
+    "review": "Semantic - the agent reads the `look_for` signal and judges. No linter can decide it."
+  },
+  "rules": [
+    {
+      "id": "no-plain-error-class",
+      "title": "`class X extends Error` collapses structurally; use Data.TaggedError",
+      "pillar": "errors",
+      "severity": "error",
+      "check": "oxlint",
+      "rule": "no-plain-error-class",
+      "source": { "who": "mikearnaldi", "issue": 3742 },
+      "why": "TS structural typing makes every bare Error subclass equivalent, so `A | B | Error` reduces to `Error` and catchTag can't discriminate.",
+      "bad": "class DbError extends Error {}",
+      "good": "class DbError extends Data.TaggedError(\"DbError\")<{ cause: unknown }> {}"
+    },
+    {
+      "id": "no-layer-scoped",
+      "title": "`Layer.scoped` was removed in effect@4; use Layer.effect",
+      "pillar": "runtime",
+      "severity": "error",
+      "check": "oxlint",
+      "rule": "no-layer-scoped",
+      "source": { "who": "official-skill", "issue": null },
+      "why": "In v4 `Layer.effect` accepts a Scope, so scoped acquisition goes through it.",
+      "bad": "Layer.scoped(Db, acquireDb)",
+      "good": "Layer.effect(Db, acquireDb)"
+    },
+    {
+      "id": "schema-filter-needs-jsonschema",
+      "title": "Schema.filter must carry a `{ jsonSchema }` option or JSONSchema.make throws",
+      "pillar": "schema",
+      "severity": "error",
+      "check": "oxlint",
+      "rule": "schema-filter-needs-jsonschema",
+      "source": { "who": "gcanti", "issue": 3915 },
+      "why": "A refinement requires a JSON Schema annotation.",
+      "bad": "Schema.Int.pipe(Schema.filter((n) => n > 0))",
+      "good": "Schema.Int.pipe(Schema.filter((n) => n > 0, { jsonSchema: { minimum: 1 } }))"
+    },
+    {
+      "id": "no-deprecated-effect-schema-import",
+      "title": "Import from `effect/Schema`, not the deprecated `@effect/schema`",
+      "pillar": "schema",
+      "severity": "error",
+      "check": "grep",
+      "grep": "@effect/schema",
+      "source": { "who": "official-skill", "issue": null },
+      "why": "`@effect/schema` was folded into core (`effect/Schema`) since 3.10.",
+      "bad": "import * as Schema from \"@effect/schema/Schema\"",
+      "good": "import * as Schema from \"effect/Schema\""
+    },
+    {
+      "id": "prefer-runfork-over-runsync",
+      "title": "Use runFork/runMain as the entrypoint; runSync is an edge case",
+      "pillar": "runtime",
+      "severity": "warning",
+      "check": "grep",
+      "grep": "Effect\\.runSync\\(",
+      "source": { "who": "mikearnaldi", "issue": 1400 },
+      "why": "runSync throws on any async boundary; it is for environments where async is genuinely impossible.",
+      "bad": "Effect.runSync(program)  // throws if program ever suspends",
+      "good": "Effect.runFork(program)  // or runMain from the platform package"
+    },
+    {
+      "id": "prefer-optionalkey",
+      "title": "`Schema.optional` gives `T | undefined`; for an optional struct property use `Schema.optionalKey`",
+      "pillar": "schema",
+      "severity": "warning",
+      "check": "grep",
+      "grep": "Schema\\.optional\\(",
+      "source": { "who": "official-skill", "issue": null },
+      "why": "`optional` adds `| undefined` to the value; `optionalKey` makes the KEY optional (exact optional property). Confirm which you meant.",
+      "bad": "Schema.Struct({ search: Schema.optional(Schema.String) })",
+      "good": "Schema.Struct({ search: Schema.optionalKey(Schema.String) })"
+    },
+    {
+      "id": "fiber-await-vs-join",
+      "title": "`Fiber.join` inherits all FiberRefs (incl Scope); use `Fiber.await` for value-only",
+      "pillar": "concurrency",
+      "severity": "info",
+      "check": "grep",
+      "grep": "Fiber\\.join\\(",
+      "source": { "who": "tim-smart", "issue": 5992 },
+      "why": "join overwrites the current Scope with the joined fiber's, which can fire finalizers unexpectedly.",
+      "bad": "const result = yield* Fiber.join(fiber)",
+      "good": "const exit = yield* Fiber.await(fiber)  // Exit value only, no FiberRef inheritance"
+    },
+    {
+      "id": "stream-no-scope-in-r",
+      "title": "`Stream<A, E, Scope>` is a smell - a Stream owns its Scope; use `Stream.scoped`",
+      "pillar": "concurrency",
+      "severity": "warning",
+      "check": "grep",
+      "grep": "Stream(\\.Stream)?<[^>]*Scope",
+      "source": { "who": "mikearnaldi", "issue": 3187 },
+      "why": "Streams are pull-based and manage their own Scope; Scope in R disconnects the stream's lifecycle from your outer scope.",
+      "bad": "const s: Stream.Stream<A, E, Scope> = Stream.fromEffect(Effect.acquireRelease(open, close))",
+      "good": "const s: Stream.Stream<A, E> = Stream.scoped(Effect.acquireRelease(open, close))"
+    },
+    {
+      "id": "no-provide-per-request",
+      "title": "Never `Effect.provide(AppLayer)` per request - use a ManagedRuntime or toWebHandlerLayer",
+      "pillar": "runtime",
+      "severity": "error",
+      "check": "review",
+      "look_for": "An Effect.provide(<a full app/service layer>) inside an HTTP request handler, route, or a runPromise/runSync called once per request. It rebuilds AND tears down the layer (DB pools, connections) every request.",
+      "source": { "who": "tim-smart", "issue": 4210 },
+      "bad": "const handler = (req) => Effect.runPromise(program.pipe(Effect.provide(AppLayer)))",
+      "good": "const runtime = ManagedRuntime.make(AppLayer)\nconst handler = (req) => runtime.runPromise(program)  // or HttpApp.toWebHandlerLayer(app, AppLayer)"
+    },
+    {
+      "id": "layer-factory-called-once",
+      "title": "Call a layer factory ONCE and bind to a const - calling it twice breaks memoization",
+      "pillar": "runtime",
+      "severity": "error",
+      "check": "review",
+      "look_for": "A function that returns a Layer (a layer factory) invoked more than once - e.g. `Layer.mergeAll(makeDbLayer(), makeDbLayer())` or the same factory called in two compositions. Each call is a distinct reference, so Effect memoizes them separately (two DB pools).",
+      "source": { "who": "official-skill", "issue": null },
+      "bad": "const AppLayer = Layer.mergeAll(makeDbLayer(), makeDbLayer())",
+      "good": "const DbLayer = makeDbLayer()\nconst AppLayer = Layer.mergeAll(DbLayer, OtherLayer)"
+    },
+    {
+      "id": "no-provide-in-business-logic",
+      "title": "Don't `Effect.provide` inside a service method - receive deps via `yield*` at construction",
+      "pillar": "services",
+      "severity": "warning",
+      "check": "review",
+      "look_for": "Effect.provide(<a service's Default layer>) inside a service method / business-logic function, instead of acquiring the dependency with `yield* Dep` when the service is constructed and composing layers at the boundary.",
+      "source": { "who": "mikearnaldi", "issue": 5202 },
+      "bad": "inc2: (x) => pipe(inc1.inc(x), Effect.provide(Inc1.Default))",
+      "good": "const inc1 = yield* Inc1\nreturn { inc2: (x) => inc1.inc(x) }  // compose: Inc2.Default.pipe(Layer.provideMerge(Inc1.Default))"
+    },
+    {
+      "id": "service-no-shadow-tag-builtins",
+      "title": "Service property names must not shadow Tag built-ins (context/of/key/identifier)",
+      "pillar": "services",
+      "severity": "warning",
+      "check": "review",
+      "look_for": "An Effect.Service whose returned object has a property named `context`, `of`, `key`, or `identifier` - these collide with the Tag class static members and the accessor proxy silently returns the wrong value.",
+      "source": { "who": "fubhy", "issue": 2745 },
+      "bad": "Effect.Service<S>()(\"S\", { effect: Effect.succeed({ context: value }) })",
+      "good": "Effect.Service<S>()(\"S\", { effect: Effect.succeed({ ctx: value }) })"
+    },
+    {
+      "id": "no-flow-with-accessor",
+      "title": "Service accessors are proxies - they break `flow()`; capture the instance or use `pipe`",
+      "pillar": "services",
+      "severity": "warning",
+      "check": "review",
+      "look_for": "`flow(Service.method, ...)` using a service accessor point-free - accessors are Proxy-based and lose `this`, throwing at runtime.",
+      "source": { "who": "mikearnaldi", "issue": 5202 },
+      "bad": "const t = flow(Inc1.inc, Effect.andThen(Inc1.inc))",
+      "good": "const inc1 = yield* Inc1\nconst t = flow(inc1.inc, Effect.andThen(inc1.inc))"
+    },
+    {
+      "id": "resource-construct-order",
+      "title": "Construct resources in dependency order - finalizers run LIFO",
+      "pillar": "concurrency",
+      "severity": "warning",
+      "check": "review",
+      "look_for": "A scoped block where a consumer (e.g. a FiberSet/fibers using a pool) is created BEFORE the resource it depends on (the pool). LIFO teardown then closes the resource while consumers still run.",
+      "source": { "who": "tim-smart", "issue": 4215 },
+      "bad": "const set = yield* FiberSet.make()\nconst pool = yield* WorkerPool.make(...)",
+      "good": "const pool = yield* WorkerPool.make(...)\nconst set = yield* FiberSet.make()  // pool outlives the set"
+    },
+    {
+      "id": "forkscoped-over-fork",
+      "title": "`Effect.fork` + `awaitAllChildren` races; prefer `forkScoped` for guaranteed teardown",
+      "pillar": "concurrency",
+      "severity": "warning",
+      "check": "review",
+      "look_for": "`Effect.fork(...)` followed by `Effect.awaitAllChildren` in the same synchronous block (fiber may not have started yet), or any long-lived fork without scoped cleanup.",
+      "source": { "who": "tim-smart", "issue": 2768 },
+      "bad": "yield* Effect.fork(longRunning)\nyield* Effect.awaitAllChildren  // may hang/miss it",
+      "good": "yield* Effect.forkScoped(longRunning)  // cleaned up at scope close"
+    },
+    {
+      "id": "stream-cleanup-in-stream",
+      "title": "Streaming HTTP/SSE cleanup belongs in the Stream, not the handler scope",
+      "pillar": "concurrency",
+      "severity": "warning",
+      "check": "review",
+      "look_for": "`Effect.addFinalizer`/`forkScoped` in an HTTP handler that returns a streaming response. Bun (and similar) consume the body after the handler scope closes, so the finalizer fires too early.",
+      "source": { "who": "tim-smart", "issue": 5076 },
+      "bad": "yield* Effect.addFinalizer(cleanup); return HttpServerResponse.stream(body)",
+      "good": "const body = myStream.pipe(Stream.ensuring(cleanup))  // or Stream.unwrapScoped(...)"
+    },
+    {
+      "id": "config-provider-for-edge",
+      "title": "Browser/edge config: build a ConfigProvider.fromMap (process.env isn't dynamic there)",
+      "pillar": "config",
+      "severity": "warning",
+      "check": "review",
+      "look_for": "Config.* reads in a browser / Cloudflare Worker / bundled context relying on dynamic `process.env` access, which the bundler can't provide at runtime.",
+      "source": { "who": "mikearnaldi", "issue": 3427 },
+      "bad": "yield* Config.string(\"API_URL\")  // undefined in the browser bundle",
+      "good": "Layer.setConfigProvider(ConfigProvider.fromMap(new Map([[\"API_URL\", process.env.NEXT_PUBLIC_API_URL!]])))"
+    },
+    {
+      "id": "schema-contextual-description-on-property",
+      "title": "Contextual descriptions go on `Schema.propertySignature`, not `.annotations()` on the schema",
+      "pillar": "schema",
+      "severity": "warning",
+      "check": "review",
+      "look_for": "`.annotations({ description / missingMessage })` applied to a schema sitting in a Struct field. For transform schemas (DateFromString etc.) JSONSchema.make ignores it; the annotation belongs on the property signature.",
+      "source": { "who": "gcanti", "issue": 3016 },
+      "bad": "Schema.Struct({ createdAt: Schema.DateFromString.annotations({ description: \"...\" }) })",
+      "good": "Schema.Struct({ createdAt: Schema.propertySignature(Schema.DateFromString).annotations({ description: \"...\" }) })"
+    },
+    {
+      "id": "schema-class-no-extend",
+      "title": "`Schema.Class` IS a transformation - `Schema.extend` rejects it; extend the encoded sides",
+      "pillar": "schema",
+      "severity": "warning",
+      "check": "review",
+      "look_for": "`Schema.extend` applied to a `Schema.Class` (which implicitly defines a Struct->instance transformation). extend rejects transformations.",
+      "source": { "who": "gcanti", "issue": 3681 },
+      "bad": "ClassA.pipe(Schema.extend(ClassB))",
+      "good": "Schema.encodedSchema(ClassA).pipe(Schema.extend(Schema.encodedSchema(ClassB)))"
+    },
+    {
+      "id": "schema-transform-preserve-brand",
+      "title": "`Schema.transform` drops brands on the encoded side - wrap in `Schema.typeSchema` to keep them",
+      "pillar": "schema",
+      "severity": "warning",
+      "check": "review",
+      "look_for": "A `Schema.transform` whose `from` (encoded) side is a branded schema where you expect the brand to survive - by default the encoded side is unbranded.",
+      "source": { "who": "gcanti", "issue": 5953 },
+      "bad": "Schema.transform(BrandedString, To, { ... })  // encoded side: plain string",
+      "good": "Schema.transform(Schema.typeSchema(BrandedString), To, { ... })"
+    },
+    {
+      "id": "schema-declare-vs-transform",
+      "title": "`Schema.declare` is for new opaque types; use `Schema.transform` for conversions",
+      "pillar": "schema",
+      "severity": "warning",
+      "check": "review",
+      "look_for": "`Schema.declare` used to convert one type to another (e.g. string -> HashMap). declare is for registering a brand-new data type whose decode/encode return the SAME type.",
+      "source": { "who": "gcanti", "issue": 4894 },
+      "bad": "Schema.declare(..., { decode: parse, encode: serialize })  // for a conversion",
+      "good": "Schema.transform(Schema.String, Schema.declare(...), { decode: parse, encode: serialize })"
+    },
+    {
+      "id": "trypromise-sync-throw-is-fail",
+      "title": "`Effect.tryPromise` treats a synchronous throw as a typed fail, not a defect",
+      "pillar": "errors",
+      "severity": "info",
+      "check": "review",
+      "look_for": "Reliance on a sync throw inside `Effect.tryPromise(fn)` becoming a defect - it becomes a typed fail (matching Effect.try). Wrap in `async () => syncFn()` if you want a defect.",
+      "source": { "who": "mikearnaldi", "issue": 5648 },
+      "bad": "Effect.tryPromise(syncThrower)  // sync throw -> Fail(UnknownException)",
+      "good": "Effect.tryPromise(async () => syncThrower())  // sync throw -> Defect, if that's intended"
+    }
+  ]
+}
