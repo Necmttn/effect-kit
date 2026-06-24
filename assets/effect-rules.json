@@ -256,6 +256,28 @@
       "source": { "who": "mikearnaldi", "issue": 5648 },
       "bad": "Effect.tryPromise(syncThrower)  // sync throw -> Fail(UnknownException)",
       "good": "Effect.tryPromise(async () => syncThrower())  // sync throw -> Defect, if that's intended"
+    },
+    {
+      "id": "prefer-struct-over-class-for-dto",
+      "title": "Use `Schema.Struct` + interface for shared DTOs; `Schema.Class` only for identity-bearing domain objects",
+      "pillar": "schema",
+      "severity": "warning",
+      "check": "review",
+      "look_for": "A `Schema.Class` used for a plain public/shared data type that travels across packages or is used as a LayerMap/Data.equal/hash key. v4 structurally compares plain records; Schema.Class adds nominal identity that breaks that dedup. Reserve Schema.Class for types with behavior statics / true identity.",
+      "source": { "who": "kitlangton", "issue": 33571 },
+      "bad": "export class Prompt extends Schema.Class<Prompt>(\"Prompt\")({ text: Schema.String }) {}",
+      "good": "export interface Prompt extends Schema.Schema.Type<typeof Prompt> {}\nexport const Prompt = Schema.Struct({ text: Schema.String }).annotate({ identifier: \"Prompt\" })"
+    },
+    {
+      "id": "no-forwarding-facade",
+      "title": "Delete re-export-only schema modules; import the canonical schema directly",
+      "pillar": "architecture",
+      "severity": "warning",
+      "check": "review",
+      "look_for": "A module whose only job is to re-export schemas defined elsewhere (a forwarding facade). It adds an indirection hop that obscures where identity lives. Keep behavior-bearing modules; delete pure schema re-export shims and import the source directly.",
+      "source": { "who": "kitlangton", "issue": 33577 },
+      "bad": "// schemas.ts\nexport { Session, Message } from \"./core/session.ts\"  // re-export only",
+      "good": "// import canonical schemas directly from their source module"
     }
   ]
 }
