@@ -149,7 +149,10 @@ describe("skills.json completeness", () => {
       ...readdirSync(join(root, "assets"))
         .filter((f) => f !== "oxlint-effect-rules")
         .map((f) => `assets/${f}`),
-      "assets/oxlint-effect-rules/no-inline-schema-compile.ts",
+      // every oxlint rule, enumerated (not just the first one)
+      ...readdirSync(join(root, "assets", "oxlint-effect-rules")).map(
+        (f) => `assets/oxlint-effect-rules/${f}`,
+      ),
     ];
     for (const f of want) expect(manifest.files, f).toContain(f);
   });

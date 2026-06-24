@@ -9,7 +9,7 @@ description: The opinionated, agent-optimized way to set up, write, verify, and 
 ## Pillars
 - **Setup** → references/setup.md  (tsgo + gate + severity table; one opinionated full setup)
 - **Write** → references/patterns.md  (Makisuo's patterns + namespace imports)
-- **Verify** → references/verify.md  (diagnostics CLI + recipe pack; trust the exit code)
+- **Verify** → references/verify.md  (diagnostics CLI + recipe pack; trust the exit code) · maintainer-pattern catalog → references/guide-maintainer-patterns.md (oxlint → grep → review)
 - **Observe** → references/observe.md  (v4 Otlp.layerJson → Maple; Agent-Observe via devkit)
 
 ## Install - run this checklist top to bottom (one todo per item)
